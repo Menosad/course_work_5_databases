@@ -3,6 +3,7 @@ import os
 
 path_to_database = os.path.join('..', 'data', 'database.ini')
 
+
 def config(file_name=path_to_database, section='postgres'):
     parser = ConfigParser()
     parser.read(file_name)
@@ -15,5 +16,3 @@ def config(file_name=path_to_database, section='postgres'):
         return db
     except:
         print(f"Error")
-
-print(config())

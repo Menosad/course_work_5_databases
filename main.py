@@ -1,5 +1,4 @@
-from src.config import config
-from src.utils import get_response
+from src.utils import get_response, upload_to_database
 
 
 def main():
@@ -9,7 +8,7 @@ def main():
     print(f"Приветствую!\nВакансия для сбора данны:")
     user_input = input().lower().strip()
     data = get_response(user_input)
-    get_params = config()
+    upload_to_database()
     pass
 
 
