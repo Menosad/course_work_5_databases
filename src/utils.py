@@ -19,6 +19,11 @@ def get_response(user_input):
             vac_dict['from'] = vacancy.get('salary').get('from')
             vac_dict['to'] = vacancy.get('salary').get('to')
             vac_dict['currency'] = vacancy['salary']['currency']
+        else:
+            vac_dict['from'] = vacancy.get('salary')
+            vac_dict['to'] = vacancy.get('salary')
+            vac_dict['currency'] = vacancy.get('salary')
+
         data_list.append(vac_dict)
     return data_list
 
@@ -46,13 +51,10 @@ def upload_to_database(data_list):
             insert = (f"INSERT INTO vacancies (name, salary_from, salary_to, currency, "
                       f"company, url) VALUES(%s, %s, %s, %s, %s, %s)")
             for data in data_list:
-                #тут надо прописать ИФ для каждого случая с САЛАРИ!
                 item_tuple = (data['name'], data['from'], data['to'], data['currency'],
                               data['company'], data['url'])
                 cur.execute(insert, item_tuple)
-            # item_tuple = (data_list[0]['name'], data_list[0]['salary_from'], data_list[0]['salary_to'], data_list[0]['currency'],
-            #               data_list[0]['company'], data_list[0]['url'])
-            # cur.execute(insert, item_tuple)
+
         conn.commit()
         with conn.cursor() as cur:
             # cur.execute(f"SELECT table_name FROM information_schema.tables "
@@ -62,5 +64,55 @@ def upload_to_database(data_list):
             for row in rows:
                 print(row)
 
-data = get_response('строитель')
-upload_to_database(data)
+
+class DBManager:
+    __slots__ = ['final_data']
+
+    def __init__(self):
+        self.final_data = []
+
+    def get_companies_and_vacancies_count(self):
+        """получает список всех компаний и количество вакансий у каждой компании"""
+        headers = {'User-Agent': 'HH-User-Agent'}
+        url = 'https://api.hh.ru/vacancies'
+        for num, i in enumerate(range(19)):
+            params = {'per_page': 110, 'page': i}
+            response = requests.get(url, headers=headers, params=params)
+            vacancies_list = json.loads(response.text)['items']
+            self.final_data.extend(vacancies_list)
+        return self.final_data, len(self.final_data)
+
+    def get_all_vacancies(self):
+        """получает список всех вакансий с указанием названия компании,
+        названия вакансии и зарплаты и ссылки на вакансию"""
+        vacancies_list = []
+        for vacancy in self.final_data:
+            vac_dict = {'company': vacancy['employer']['name'], 'name': vacancy['name'], 'url': vacancy['alternate_url']}
+            if vacancy.get('salary'):
+                vac_dict['from'] = vacancy.get('salary').get('from')
+                vac_dict['to'] = vacancy.get('salary').get('to')
+                vac_dict['currency'] = vacancy['salary']['currency']
+            else:
+                vac_dict['from'] = vacancy.get('salary')
+                vac_dict['to'] = vacancy.get('salary')
+                vac_dict['currency'] = vacancy.get('salary')
+            vacancies_list.append(vac_dict)
+        return vacancies_list
+
+
+    def get_avg_salary(self):
+        """получает среднюю зарплату по вакансиям"""
+        pass
+    def get_vacancies_with_higher_salary(self):
+        """получает список всех вакансий, у которых зарплата выше средней по всем вакансиям"""
+        pass
+    def get_vacancies_with_keyword(self):
+        """получает список всех вакансий, в названии которых содержатся переданные в метод слова,
+         например python"""
+        pass
+
+
+dbmanager = DBManager()
+dbmanager.get_companies_and_vacancies_count()
+data = dbmanager.get_all_vacancies()
+print(data[0])
