@@ -60,7 +60,7 @@ def upload_to_database(data_list):
             # cur.execute(f"SELECT table_name FROM information_schema.tables "
             #             f"WHERE table_schema = 'public'")
             cur.execute("SELECT * FROM vacancies")
-            rows = cur.fetchall()
+            rows = cur.fetchall() 
             for row in rows:
                 print(row)
 
@@ -74,7 +74,7 @@ class DBManager:
 
     def get_companies_and_vacancies_count(self):
         """получает список всех компаний и количество вакансий у каждой компании"""
-        print(f"Собираю данные по Вашему запросу...")
+        print(f"Собираю данные по запросу...")
         headers = {'User-Agent': 'HH-User-Agent'}
         url = 'https://api.hh.ru/vacancies'
         for i in range(19):
@@ -113,8 +113,9 @@ class DBManager:
                         f"url varchar(100))")
         drop_table = f"DROP TABLE IF EXISTS vacancies"
         params = config()
+        print(f"Заношу данные в таблицу")
         insert_data = (f"INSERT INTO vacancies (name, salary_from, salary_to, currency, company, url) VALUES (%s, %s, "
-                       f"%s, %s, %s, %s, %s)")
+                       f"%s, %s, %s, %s)")
         with psycopg2.connect(**params) as conn:
             with conn.cursor() as cur:
                 cur.execute(drop_table)
@@ -122,18 +123,23 @@ class DBManager:
             conn.commit()
             with conn.cursor() as cur:
                 for vac in self.vacancies_list:
-                    cur.execute(insert_data, (vac['name'], vac['salary_from'], vac['salary_to'], vac['currency'],
+                    cur.execute(insert_data, (vac['name'], vac['from'], vac['to'], vac['currency'],
                                               vac['company'], vac['url']))
             conn.commit()
+        return self.vacancies_list
+    def get_avg_salary(self):
+        """получает среднюю зарплату по вакансиям"""
+        params = config()
+        with psycopg2.connect(**params) as conn:
+            # with conn.cursor() as cursor:
+            #
+            #     pass
+            #conn.commit()
             with conn.cursor() as cur:
-                cur.execute(f"SELECT * FROM vacancies")
+                cur.execute(f"SELECT company FROM vacancies")
                 rows = cur.fetchall()
                 for row in rows:
                     print(row)
-
-    def get_avg_salary(self):
-        """получает среднюю зарплату по вакансиям"""
-        pass
 
     def get_vacancies_with_higher_salary(self):
         """получает список всех вакансий, у которых зарплата выше средней по всем вакансиям"""
@@ -149,3 +155,4 @@ dbmanager = DBManager()
 dbmanager.get_companies_and_vacancies_count()
 data = dbmanager.get_all_vacancies()
 dbmanager.loading_data_into_database()
+dbmanager.get_avg_salary()
