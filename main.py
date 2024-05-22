@@ -1,16 +1,13 @@
-from src.utils import get_response, upload_to_database
+from src.utils import get_vacancies_list, upload_to_database
+from src.class_DBManager import DBManager
+from src.config import config
+import os
 
 
-def main():
-    """Логика основного скрипта
-    -- обновляет / формирует таблицу по запросу для каждого запроса отдельно"""
+path_to_file = os.path.join('data', 'database.ini')
+par = config(path_to_file)
+# vacancies_list = get_vacancies_list()
+# upload_to_database(vacancies_list, par)
+dbman = DBManager(par)
+dbman.get_avg_salary()
 
-    print(f"Приветствую!\nВакансия для сбора данны:")
-    user_input = input().lower().strip()
-    data = get_response(user_input)
-    upload_to_database()
-    pass
-
-
-if __name__ == '__main__':
-    pass
