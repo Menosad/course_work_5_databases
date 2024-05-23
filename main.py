@@ -9,5 +9,6 @@ par = config(path_to_file)
 # vacancies_list = get_vacancies_list()
 # upload_to_database(vacancies_list, par)
 dbman = DBManager(par)
-dbman.get_avg_salary()
+word = input(f"Введите название вакансии: ")
+dbman.get_vacancies_with_keyword(word)
 

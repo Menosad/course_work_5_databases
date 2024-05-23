@@ -6,7 +6,6 @@ class DBManager:
         self.params = params
         self.selected_companies = self.selecting_companies()
 
-
     @staticmethod
     def executing(cur):
         """Метод для вывода информации запрошенной из таблицы"""
@@ -79,9 +78,36 @@ class DBManager:
 
     def get_vacancies_with_higher_salary(self):
         """получает список всех вакансий, у которых зарплата выше средней по всем вакансиям"""
-        pass
+        conn = psycopg2.connect(**self.params)
+        tpl_company = tuple(self.selected_companies)
+        try:
+            with conn:
+                with conn.cursor() as cur:
+                    cur.execute(f"SELECT AVG((salary_from + salary_to)/2) FROM vacancies "
+                                f"WHERE currency = 'RUR'")
+                    avg_salary = cur.fetchall()
+                    cur.execute(f"SELECT name FROM vacancies "
+                                f"WHERE (salary_from + salary_to)/2 > {avg_salary[0][0]} "
+                                f"AND company IN {tpl_company}")
+                    companies = self.executing(cur)
+        finally:
+            conn.close()
+        return companies
 
-    def get_vacancies_with_keyword(self):
+    def get_vacancies_with_keyword(self, word):
         """получает список всех вакансий, в названии которых содержатся переданные в метод слова,
          например python"""
-        pass
+        conn = psycopg2.connect(**self.params)
+        try:
+            with conn:
+                with conn.cursor() as cur:
+                    #cur.execute("SELECT * FROM vacancies")
+                    cur.execute(f"SELECT name FROM vacancies "
+                                f"WHERE name LIKE '%{word}%'")
+                    vacancies = self.executing(cur)
+                    if len(vacancies) == 0:
+                        print(f"По вашему запросу ничего не найдено!")
+        finally:
+            conn.close()
+
+        return vacancies
