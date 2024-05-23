@@ -15,6 +15,7 @@ class DBManager:
         return rows
 
     def selecting_companies(self):
+        """10 интересных компаний"""
         conn = psycopg2.connect(**self.params)
         companies = []
         try:

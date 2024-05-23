@@ -1,6 +1,8 @@
 import requests
 import psycopg2
+from src.class_DBManager import DBManager
 from src.config import config
+import os
 
 
 def get_vacancies_list():
@@ -56,3 +58,36 @@ def upload_to_database(data_list: list, params):
         print(f"Данные успешно загруженны")
     finally:
         conn.close()
+
+def information_output():
+    path_to_config = os.path.join('data', 'database.ini')
+    par = config(path_to_config)
+    dbman = DBManager(par)
+    commands = ('companies', 'vacancies', 'avg_salary',
+                'higher_salary', 'keyword', 'stop')
+    command = ''
+    while True:
+        print(f"\nВыберите команду:\n")
+        print(f"companies - выводит список всех компаний и \nколичество вакансий у каждой компании;\n"
+              f"vacancies - получает список всех вакансий с указанием названия компании, \nназвания вакансии и зарплаты и ссылки на вакансию;\n"
+              f"avg_salary - получает среднюю зарплату по вакансиям;\n"
+              f"higher_salary - получает список всех вакансий, у которых \nзарплата выше средней по всем вакансиям;\n"
+              f"keyword - получает список всех вакансий, в названии которых \nсодержатся переданные в метод слова, например python;\n"
+              f"stop - завершает работу приложения.")
+        command = input().lower().strip()
+        if command not in commands:
+            print(f"\nТАКОЙ КОМАНДЫ НЕТ!\n")
+        else:
+            if command == 'companies':
+                dbman.get_companies_and_vacancies_count()
+            elif command == 'vacancies':
+                dbman.get_all_vacancies()
+            elif command == 'avg_salary':
+                dbman.get_avg_salary()
+            elif command == 'higher_salary':
+                dbman.get_vacancies_with_higher_salary()
+            elif command == 'keyword':
+                dbman.get_vacancies_with_keyword()
+            elif command == 'stop':
+                print(f"Работа завершена!")
+                quit()
