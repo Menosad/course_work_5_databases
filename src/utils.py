@@ -8,6 +8,7 @@ def get_vacancies_list():
     url = 'https://api.hh.ru/vacancies'
     headers = {'User-Agent': 'HH-User-Agent'}
     items_list = []
+    print(f"Загружаю данные с сайта hh.ru...")
     for i in range(19):
         param = {'page': i+1, 'per_page': 20}
         response_json = requests.get(url, params=param, headers=headers).json()
@@ -31,6 +32,7 @@ def get_vacancies_list():
 def upload_to_database(data_list: list, params):
     """Функция загружающая полученные данные в базу даных postgres в таблицу vacancies"""
     conn = psycopg2.connect(**params)
+    print(f"Заношу данные в таблицу...")
     try:
         with conn:
             with conn.cursor() as cur:

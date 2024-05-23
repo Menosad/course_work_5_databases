@@ -94,14 +94,15 @@ class DBManager:
             conn.close()
         return companies
 
-    def get_vacancies_with_keyword(self, word):
+    def get_vacancies_with_keyword(self):
         """получает список всех вакансий, в названии которых содержатся переданные в метод слова,
          например python"""
         conn = psycopg2.connect(**self.params)
+        print(f"Введите слово для отбора вакансий: ")
+        word = input().lower().strip()
         try:
             with conn:
                 with conn.cursor() as cur:
-                    #cur.execute("SELECT * FROM vacancies")
                     cur.execute(f"SELECT name FROM vacancies "
                                 f"WHERE name LIKE '%{word}%'")
                     vacancies = self.executing(cur)
