@@ -7,34 +7,42 @@ import os
 
 def get_vacancies_list():
     """Получение списка словарей о вакансиях и компаниях"""
-    url = 'https://api.hh.ru/vacancies'
+    url = 'https://api.hh.ru/employers'
     headers = {'User-Agent': 'HH-User-Agent'}
     items_list = []
     print(f"Загружаю данные с сайта hh.ru...")
-    for i in range(19):
-        param = {'page': i+1, 'per_page': 20}
-        response_json = requests.get(url, params=param, headers=headers).json()
-        items_list.extend(response_json['items'])
-    vacancies_list = []
-    for vacancy in items_list:
-        vac_dict = {'name': vacancy['name'], 'company': vacancy['employer']['name'], 'city': vacancy['area']['name'],
-                    'url': vacancy['alternate_url']}
-        if vacancy.get('salary'):
-            vac_dict['from'] = vacancy.get('salary').get('from')
-            vac_dict['to'] = vacancy.get('salary').get('to')
-            vac_dict['currency'] = vacancy['salary']['currency']
+    employers_list = (1107346, 1299621, 1426894, 2513924, 2663290, 3194491, 3440765, 5724503, 5952388, 1389429) #Избранные 10 компаний
+    url_list = []
+    for employer_id in employers_list:
+        full_url = url + '/' + str(employer_id)
+        url_list.append(full_url)
+    for i in range(len(employers_list)):
+        items = requests.get(url_list[i], headers=headers).json()
+        items_list.append(items)
+    vacancies = []
+    for data in items_list:
+        resp = requests.get(data['vacancies_url'], headers={'User-Agent': 'HH-User-Agent'}).json()['items']
+        vacancies.extend(resp)
+    final_list = []
+    for vac in vacancies:
+        vacancy = {'name': vac['name'], 'company': vac['employer']['name'], 'url': vac['alternate_url']}
+        if vac.get('salary'):
+            vacancy['from'] = vac.get('salary').get('from')
+            vacancy['to'] = vac.get('salary').get('to')
+            vacancy['currency'] = vac.get('salary').get('currency')
         else:
-            vac_dict['from'] = vacancy.get('salary')
-            vac_dict['to'] = vacancy.get('salary')
-            vac_dict['currency'] = vacancy.get('salary')
-        vacancies_list.append(vac_dict)
-    return vacancies_list
+            vacancy['from'] = None
+            vacancy['to'] = None
+            vacancy['currency'] = None
+        final_list.append(vacancy)
+
+    return final_list
 
 
 def upload_to_database(data_list: list, params):
     """Функция загружающая полученные данные в базу даных postgres в таблицу vacancies"""
-    conn = psycopg2.connect(**params)
     print(f"Заношу данные в таблицу...")
+    conn = psycopg2.connect(**params)
     try:
         with conn:
             with conn.cursor() as cur:
@@ -55,14 +63,13 @@ def upload_to_database(data_list: list, params):
                     item_tuple = (vac['name'], vac['from'], vac['to'], vac['currency'],
                                   vac['company'], vac['url'])
                     cur.execute(insert, item_tuple)
-        print(f"Данные успешно загруженны")
+        print(f"Данные успешно загружены")
     finally:
         conn.close()
 
-def information_output():
-    path_to_config = os.path.join('data', 'database.ini')
-    par = config(path_to_config)
-    dbman = DBManager(par)
+
+def information_output(params):
+    dbman = DBManager(params)
     commands = ('companies', 'vacancies', 'avg_salary',
                 'higher_salary', 'keyword', 'stop')
     command = ''
